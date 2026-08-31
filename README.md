@@ -1,66 +1,86 @@
 # 🛡️ AI Risk Manager
 
-### Human-in-the-Loop Fraud Detection, Risk Routing & Explainable AI
+### End-to-End Fraud Detection, Risk Routing, Explainable AI & Human-in-the-Loop Investigation
 
-AI Risk Manager is an end-to-end fraud risk management system that combines **Machine Learning, probability calibration, contextual risk scoring, cost-sensitive decision making, SHAP explainability, LLM-generated investigation summaries, and human-in-the-loop review**.
+AI Risk Manager is an end-to-end fraud risk management system designed to go beyond simple fraud classification.
 
-Instead of only predicting whether a transaction is fraudulent, the system determines the appropriate operational action:
+The system predicts transaction fraud risk and converts that prediction into an operational decision:
 
 **ALLOW → REVIEW → BLOCK**
 
-For transactions requiring investigation, the system provides explainable risk factors and an AI-generated investigation summary. A human reviewer can then make the final decision and provide a rationale for auditability.
+For suspicious transactions, the system provides SHAP-based explanations, generates an LLM investigation summary, and supports human review with an auditable final decision.
 
 ---
 
-## 📌 Table of Contents
+## 🚀 Project Overview
 
-- [Project Overview](#-project-overview)
-- [Problem Statement](#-problem-statement)
-- [Objectives](#-objectives)
-- [System Architecture](#-system-architecture)
-- [Project Workflow](#-project-workflow)
-- [Dataset & Features](#-dataset--features)
-- [Machine Learning](#-machine-learning)
-- [Probability Calibration](#-probability-calibration)
-- [Contextual Risk Scoring](#-contextual-risk-scoring)
-- [Cost-Sensitive Routing](#-cost-sensitive-routing)
-- [Explainable AI](#-explainable-ai)
-- [LLM Investigation](#-llm-investigation)
-- [Human-in-the-Loop Review](#-human-in-the-loop-review)
-- [Results](#-results)
-- [Project Structure](#-project-structure)
-- [Installation](#-installation)
-- [Running the Application](#-running-the-application)
-- [Dashboard](#-dashboard)
-- [Technologies Used](#-technologies-used)
-- [Future Improvements](#-future-improvements)
-- [Conclusion](#-conclusion)
+Traditional fraud detection systems often focus only on:
 
----
+> "Is this transaction fraudulent?"
 
-# 🚀 Project Overview
-
-Fraud detection is not simply a classification problem.
-
-In a real-world financial system, an organization needs to determine:
+A real-world risk management system needs to answer additional questions:
 
 - How likely is the transaction to be fraudulent?
 - How reliable is the predicted probability?
-- What factors are contributing to the risk?
+- What factors are driving the risk?
 - Should the transaction be allowed, reviewed, or blocked?
-- Why was the transaction considered risky?
-- Can a human investigator understand the evidence?
-- Can the final human decision be recorded for auditing?
+- Why was the transaction flagged?
+- Can an investigator understand the evidence?
+- Can a human override the AI decision?
+- Can the final decision be audited?
 
-**AI Risk Manager** addresses these requirements through a complete fraud risk decision pipeline.
+AI Risk Manager addresses these requirements through a complete decision pipeline combining:
 
-The system combines predictive modeling with business-aware decision making and human oversight.
+- Machine Learning
+- Probability Calibration
+- Contextual Risk Scoring
+- Cost-Sensitive Decision Making
+- Risk Routing
+- SHAP Explainability
+- LLM Investigation Summaries
+- Human-in-the-Loop Review
+- Audit Logging
 
 ---
 
-# 🎯 Problem Statement
-
-Traditional fraud detection systems often focus on a binary prediction:
+# 🏗️ System Architecture
 
 ```text
-Transaction → Fraud / Not Fraud
+                         Transaction Data
+                                │
+                                ▼
+                     Data Preprocessing
+                                │
+                                ▼
+                     Feature Engineering
+                                │
+                                ▼
+                       Fraud ML Model
+                                │
+                                ▼
+                  Probability Calibration
+                                │
+                                ▼
+                    Contextual Risk Score
+                                │
+                                ▼
+                    Cost-Sensitive Router
+                                │
+                 ┌──────────────┼──────────────┐
+                 ▼              ▼              ▼
+              ALLOW           REVIEW          BLOCK
+                                │
+                                ▼
+                         SHAP Investigation
+                                │
+                                ▼
+                         LLM Explanation
+                                │
+                                ▼
+                       Human Reviewer
+                                │
+                                ▼
+                  Final Decision + Rationale
+                                │
+                                ▼
+                         Audit Trail
