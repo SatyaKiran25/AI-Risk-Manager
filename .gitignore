@@ -1,7 +1,10 @@
 # ==============================
 # Project Data
 # ==============================
-data/
+# Keep generated LLM caches out of Git
+data/processed/llm_batch_cache_v2.json
+data/processed/llm_explanations_cache.json
+data/processed/llm_explanations_cache.jsonl
 
 # ==============================
 # Python
