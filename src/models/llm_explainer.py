@@ -96,234 +96,74 @@ def build_risk_factor_text(txn):
     """
     Build an explicit, human-readable list of risk factors.
 
-    IMPORTANT:
-    Gemini receives the actual feature names and values so that
-    the generated explanation can refer to them directly.
+    FIX: this now reads directly from the transaction's actual ranked SHAP
+    contributions (txn["shap_explanation"], already sorted by |contribution|
+    in 06_shap_investigator.py) instead of a fixed set of hand-picked
+    features with hardcoded thresholds.
+
+    The previous version only ever surfaced merchant_risk_tier, new_device,
+    new_location, location_mismatch, new_merchant, velocity_anomaly,
+    time_of_day_anomaly, amount_z_score, and hour (and only when hour fell
+    in a hardcoded 22:00-05:00 window) - day_of_week had NO handling at
+    all, and any feature could have a large real SHAP contribution for a
+    specific transaction yet never be mentioned, because the selection
+    logic never consulted the actual SHAP values. That caused explanations
+    to silently omit real top contributors (e.g. hour=+1.2154,
+    day_of_week=+0.3690) while still calling out smaller or unrelated ones.
+
+    Now: take the top N SHAP factors that INCREASE risk (positive
+    contribution), by actual magnitude, whatever features they happen to
+    be - then apply a friendly label only for readability, never as a
+    filter that can drop a feature.
     """
+
+    TOP_N = 4
+
+    # Friendly labels are cosmetic only - every feature still gets included
+    # based on its real SHAP contribution, whether or not it has a label here.
+    FRIENDLY_LABELS = {
+        "merchant_risk_tier": "high-risk merchant tier",
+        "new_device": "transaction from a new device",
+        "new_location": "transaction from a new location",
+        "location_mismatch": "location mismatch detected",
+        "new_merchant": "transaction involves a new merchant",
+        "velocity_anomaly": "unusual transaction velocity",
+        "time_of_day_anomaly": "unusual transaction time",
+        "hour": "unusual hour of transaction",
+        "day_of_week": "unusual day of week",
+        "amount_z_score": "unusually large transaction amount",
+    }
+
+    shap_explanation = safe_value(txn.get("shap_explanation"))
+
+    if shap_explanation == "n/a" or not str(shap_explanation).strip():
+        return "No specific contextual risk factors were available."
 
     factors = []
 
-    # --------------------------------------------------------
-    # Merchant risk
-    # --------------------------------------------------------
+    # Format produced by 06_shap_investigator.py:
+    #   "feature=value (increased fraud risk, SHAP=0.1234) | feature2=..."
+    # Already sorted by |SHAP contribution| descending.
+    for entry in str(shap_explanation).split(" | "):
+        entry = entry.strip()
+        if not entry or "increased fraud risk" not in entry:
+            continue  # only surface risk-INCREASING factors, matching the dashboard's "Risk Factors Detected" panel
 
-    merchant_risk_tier = safe_value(
-        txn.get("merchant_risk_tier")
-    )
+        feature_name = entry.split("=", 1)[0].strip()
+        label = FRIENDLY_LABELS.get(feature_name)
 
-    if merchant_risk_tier != "n/a":
+        if label:
+            factors.append(f"{entry} \u2014 {label}")
+        else:
+            factors.append(entry)  # no friendly label yet, but NEVER dropped
 
-        try:
-            tier = float(merchant_risk_tier)
-
-            if tier >= 3:
-                factors.append(
-                    "merchant_risk_tier=3 (high-risk merchant tier)"
-                )
-
-            elif tier >= 2:
-                factors.append(
-                    f"merchant_risk_tier={merchant_risk_tier} "
-                    "(elevated merchant risk)"
-                )
-
-            else:
-                factors.append(
-                    f"merchant_risk_tier={merchant_risk_tier}"
-                )
-
-        except Exception:
-
-            factors.append(
-                f"merchant_risk_tier={merchant_risk_tier}"
-            )
-
-    # --------------------------------------------------------
-    # New device
-    # --------------------------------------------------------
-
-    new_device = safe_value(
-        txn.get("new_device")
-    )
-
-    if new_device != "n/a":
-
-        try:
-            if float(new_device) == 1:
-                factors.append(
-                    "new_device=1 (transaction from a new device)"
-                )
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # New location
-    # --------------------------------------------------------
-
-    new_location = safe_value(
-        txn.get("new_location")
-    )
-
-    if new_location != "n/a":
-
-        try:
-            if float(new_location) == 1:
-                factors.append(
-                    "new_location=1 (transaction from a new location)"
-                )
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Location mismatch
-    # --------------------------------------------------------
-
-    location_mismatch = safe_value(
-        txn.get("location_mismatch")
-    )
-
-    if location_mismatch != "n/a":
-
-        try:
-            if float(location_mismatch) == 1:
-                factors.append(
-                    "location_mismatch=1 (location mismatch detected)"
-                )
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # New merchant
-    # --------------------------------------------------------
-
-    new_merchant = safe_value(
-        txn.get("new_merchant")
-    )
-
-    if new_merchant != "n/a":
-
-        try:
-            if float(new_merchant) == 1:
-                factors.append(
-                    "new_merchant=1 (transaction involves a new merchant)"
-                )
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Velocity anomaly
-    # --------------------------------------------------------
-
-    velocity_anomaly = safe_value(
-        txn.get("velocity_anomaly")
-    )
-
-    if velocity_anomaly != "n/a":
-
-        try:
-            if float(velocity_anomaly) > 0:
-                factors.append(
-                    "velocity_anomaly=1 (unusual transaction velocity)"
-                )
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Time-of-day anomaly
-    # --------------------------------------------------------
-
-    time_anomaly = safe_value(
-        txn.get("time_of_day_anomaly")
-    )
-
-    if time_anomaly != "n/a":
-
-        try:
-            if float(time_anomaly) > 0:
-                factors.append(
-                    "time_of_day_anomaly=1 (unusual transaction time)"
-                )
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Amount anomaly
-    # --------------------------------------------------------
-
-    amount_z = safe_value(
-        txn.get("amount_z_score")
-    )
-
-    if amount_z != "n/a":
-
-        try:
-
-            z = abs(float(amount_z))
-
-            if z >= 3:
-                factors.append(
-                    f"amount_z_score={z:.2f} "
-                    "(highly unusual transaction amount)"
-                )
-
-            elif z >= 2:
-                factors.append(
-                    f"amount_z_score={z:.2f} "
-                    "(unusually large transaction amount)"
-                )
-
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Hour
-    # --------------------------------------------------------
-
-    hour = safe_value(
-        txn.get("hour")
-    )
-
-    if hour != "n/a":
-
-        try:
-
-            hour_value = int(float(hour))
-
-            if hour_value >= 22 or hour_value <= 5:
-
-                factors.append(
-                    f"hour={hour_value} "
-                    "(late-night transaction)"
-                )
-
-        except Exception:
-            pass
-
-    # --------------------------------------------------------
-    # Existing SHAP explanation
-    # --------------------------------------------------------
-
-    shap_explanation = safe_value(
-        txn.get("shap_explanation")
-    )
-
-    if shap_explanation != "n/a":
-        factors.append(
-            f"SHAP contribution summary: {shap_explanation}"
-        )
-
-    # --------------------------------------------------------
-    # No factors
-    # --------------------------------------------------------
+        if len(factors) >= TOP_N:
+            break
 
     if not factors:
+        return "No risk-increasing factors were identified for this transaction."
 
-        return "No specific contextual risk factors were available."
-
-    return "\n".join(
-        f"- {factor}"
-        for factor in factors
-    )
+    return "\n".join(f"- {factor}" for factor in factors)
 
 
 # ============================================================

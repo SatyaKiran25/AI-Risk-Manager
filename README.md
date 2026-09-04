@@ -170,13 +170,13 @@ pip install -r requirements.txt
 Create a key at [aistudio.google.com](https://aistudio.google.com), then set it as an environment variable:
 
 ```bash
-export GEMINI_API_KEY="AIzaSyBmix48fRrP3spfcgFklEPEbdWumjCWcqU"     # macOS/Linux
-$env:GEMINI_API_KEY="AIzaSyBmix48fRrP3spfcgFklEPEbdWumjCWcqU"       # Windows PowerShell
+export GEMINI_API_KEY="******"     # macOS/Linux
+$env:GEMINI_API_KEY="******"       # Windows PowerShell
 ```
 
 Or place it in a `.env` file in the project root:
 ```
-GEMINI_API_KEY = AIzaSyBmix48fRrP3spfcgFklEPEbdWumjCWcqU
+GEMINI_API_KEY = ******
 ```
 
 ### 3. Get the raw data
