@@ -128,13 +128,16 @@ Cost assumptions used for this simulation (documented in `src/models/04_cost_mod
 ## 🖥️ Human Review Dashboard
 
 <p align="center">
-  <img src="assets/dashboard_review_center.png" alt="Human Review Center showing risk assessment, cost-based routing, and SHAP investigation" width="800">
+  <img src="images/Dashboard_01.png" alt="Human Review Center showing risk assessment, cost-based routing, and SHAP investigation" width="800">
 </p>
 
 <p align="center">
-  <img src="assets/dashboard_human_decision.png" alt="AI Investigation explanation, evidence summary, and human decision panel" width="800">
+  <img src="images/Dashboard_02.png" alt="AI Investigation explanation, evidence summary" width="800">
 </p>
 
+<p align="center">
+  <img src="images/Dashboard_03.png" alt="Human decision panel" width="800">
+</p>
 The dashboard walks a reviewer through every stage of the pipeline for a flagged transaction: risk score and fraud probability, the router's cost-based recommendation and *why* it routed to REVIEW, SHAP-derived risk factors, an LLM-generated plain-English explanation grounded in those factors, and a final human decision (ALLOW / BLOCK / ESCALATE) with mandatory reviewer rationale — every decision is logged to the audit trail regardless of outcome.
 
 ---
